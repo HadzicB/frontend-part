@@ -1,6 +1,9 @@
-import { SignupResult } from "@/types/auth";
+import { Session, SignupResult } from "@/types/auth";
 
-export async function login(email: string, password: string): Promise<boolean> {
+export async function login(
+  email: string,
+  password: string,
+): Promise<Session | null> {
   console.log({ email }, { password });
   const res = await fetch(`${process.env.API_URL}/login`, {
     method: "POST",
@@ -9,9 +12,11 @@ export async function login(email: string, password: string): Promise<boolean> {
   });
 
   // 401 = wrong credentials (expected). Anything else is a real failure.
-  if (res.status === 401) return false;
+  if (res.status === 401) return null;
   if (!res.ok) throw new Error(`Login failed with status ${res.status}`);
-  return true;
+
+  const data = await res.json();
+  return data.session;
 }
 
 export async function signup(

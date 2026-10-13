@@ -1,3 +1,8 @@
+export type Session = {
+  id: string; // the random session ID the backend created
+  expiresAt: string; // ISO date string, e.g. "2026-10-20T13:07:18.156Z"
+};
+
 export type SignupResult = {
   success: boolean;
   errors?: Record<string, string[]>; // field errors sent by the backend (400/409)

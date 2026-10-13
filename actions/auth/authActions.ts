@@ -3,7 +3,8 @@
 import { validateLogin } from "@/lib/validation/login";
 import { validateSignup } from "@/lib/validation/signup";
 import { login, signup } from "@/services/auth/authService";
-import { ActionState } from "@/types/auth";
+import { ActionState, Session } from "@/types/auth";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function loginAction(
@@ -18,7 +19,7 @@ export async function loginAction(
     return { errors, values: { email } };
   }
 
-  let result: boolean;
+  let result: Session | null;
   try {
     result = await login(email, password);
   } catch (error) {
@@ -33,6 +34,16 @@ export async function loginAction(
   if (!result) {
     return { message: "Wrong email or password", values: { email, password } };
   }
+
+  // Store the session ID in a cookie the browser sends back on every request
+  const cookieStore = await cookies();
+  cookieStore.set("session", result.id, {
+    httpOnly: true, // JavaScript in the browser cannot read it
+    secure: process.env.NODE_ENV === "production", // HTTPS only in production
+    sameSite: "lax",
+    path: "/",
+    expires: new Date(result.expiresAt),
+  });
 
   console.log(result);
   redirect("/");
