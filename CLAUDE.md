@@ -8,7 +8,24 @@ Current state: login and signup work end to end against the separate backend (`A
 - `services/auth/authService.ts` calls the backend `/login` and `/signup` with `fetch`.
 - `actions/auth/authActions.ts` validates input (`lib/validation/`), calls the service, and on login sets an httpOnly `session` cookie from the backend's `{ id, expiresAt }`.
 - Routes live in `app/(auth)/login` and `app/(auth)/signup`. Types are in `types/auth.ts`.
-- Not built yet: reading the session cookie, route protection (no `proxy.ts`/middleware), logout.
+- Logout: `logoutAction` calls the BE `/logout` (sends `Authorization: Bearer <id>`), deletes the cookie, redirects to `/login`.
+- `proxy.ts` (project root): optimistic check only, "does a `session` cookie exist?". Public routes list: `/login`, `/signup`, `/forgot-password`; everything else is protected by default. Matcher skips `api`, `_next/static`, `_next/image`, `favicon.ico`, `.png`. Has debug `console.log`s on redirects. I decided NOT to call the backend from the proxy.
+- Real session check: `getMe(sessionId)` in `authService.ts` calls BE `GET /me` (null on 401). `app/page.tsx` uses it and shows "Hello, <username>". If the BE rejects the session (fake/expired/logged out), the page redirects to `app/session-expired/route.ts`, which deletes the cookie and redirects to `/login` (without that, the proxy would bounce the user back to `/`: redirect loop).
+- `app/user/page.tsx` is a second protected page, currently protected by the proxy only (no `getMe` yet).
+- Dev runs with `next dev --experimental-https` (self-signed cert, `https://localhost:3000`). `API_URL` stays plain http to the BE.
+
+## Next steps (in order)
+
+1. Add the `getMe` check to `app/user/page.tsx` (same as the home page).
+2. BE auth guard so every protected BE endpoint validates the session itself (see the backend CLAUDE.md).
+3. Central place for BE calls (small `fetch` wrapper, server-only): base URL, auth header, error mapping, and one spot that handles a 401 by deleting the cookie and going to `/login`.
+4. Later: forgot password; signup creating a session (auto-login); roles/permissions with a data access layer (separate, more complex topic); maybe move to a `src/` folder (`@/*` alias would change).
+
+## Still unclear to me (re-explain simply when I ask, in Serbian if I write Serbian)
+
+- Who checks the session and when, across many clicks: proxy = cookie exists only; every BE call carries the session ID and the BE checks `sessions` itself; `/me` is just a feature that returns the user, not "the" authorization.
+- Why a fake cookie passes the proxy but fails at the BE.
+- What server actions send/receive (form-data envelope and React Flight response, not JSON); only the Next-to-BE call is JSON.
 
 # How to work with me
 

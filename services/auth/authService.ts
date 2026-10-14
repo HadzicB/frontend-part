@@ -55,3 +55,18 @@ export async function logout(sessionId: string): Promise<void> {
   });
   if (!res.ok) throw new Error(`Logout failed with status ${res.status}`);
 }
+
+// Asks the backend who owns this session. null = fake, expired or logged out.
+export async function getMe(
+  sessionId: string,
+): Promise<{ id: number; username: string } | null> {
+  const res = await fetch(`${process.env.API_URL}/me`, {
+    headers: { Authorization: `Bearer ${sessionId}` },
+  });
+
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`getMe failed with status ${res.status}`);
+
+  const data = await res.json();
+  return data.user;
+}

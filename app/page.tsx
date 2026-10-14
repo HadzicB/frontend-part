@@ -1,9 +1,17 @@
 import { logoutAction } from "@/actions/auth/authActions";
 import Button from "@/components/Button";
+import { getMe } from "@/services/auth/authService";
+import { cookies } from "next/headers";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  // TODO: once auth exists, this page is protected (only logged-in users)
-  // and the user's name/email comes from the session.
+export default async function Home() {
+  // proxy.ts only checks that the cookie exists; getMe asks the backend
+  // whether the session is real and not expired.
+  const sessionId = (await cookies()).get("session")?.value;
+  const user = sessionId ? await getMe(sessionId) : null;
+  if (!user) redirect("/session-expired");
+
   return (
     <>
       <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
@@ -14,7 +22,12 @@ export default function Home() {
       </header>
       <main className="flex flex-col flex-1 items-center justify-center gap-2 bg-zinc-50 font-sans dark:bg-black">
         <h1 className="text-2xl font-semibold">Home</h1>
-        <p className="text-zinc-600 dark:text-zinc-400">You are logged in.</p>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          Hello, {user.username}
+        </p>
+        <Link href="/user" className="underline">
+          User info
+        </Link>
       </main>
     </>
   );
