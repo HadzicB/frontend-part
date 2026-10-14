@@ -4,7 +4,11 @@
 
 Learning project: Next.js fullstack app. Developed ad hoc, no fixed roadmap.
 Backend is undecided: it may be Next.js route handlers/server actions, or a separate BE app. Don't assume either; ask before adding backend-specific code.
-Current state: login boilerplate only. `services/auth/authService.ts` is a stub with a TODO for the real backend call.
+Current state: login and signup work end to end against the separate backend (`API_URL` in `.env.local`).
+- `services/auth/authService.ts` calls the backend `/login` and `/signup` with `fetch`.
+- `actions/auth/authActions.ts` validates input (`lib/validation/`), calls the service, and on login sets an httpOnly `session` cookie from the backend's `{ id, expiresAt }`.
+- Routes live in `app/(auth)/login` and `app/(auth)/signup`. Types are in `types/auth.ts`.
+- Not built yet: reading the session cookie, route protection (no `proxy.ts`/middleware), logout.
 
 # How to work with me
 

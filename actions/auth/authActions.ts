@@ -2,7 +2,12 @@
 
 import { validateLogin } from "@/lib/validation/login";
 import { validateSignup } from "@/lib/validation/signup";
-import { login, signup } from "@/services/auth/authService";
+import {
+  login,
+  logout,
+  ServiceUnavailableError,
+  signup,
+} from "@/services/auth/authService";
 import { ActionState, Session } from "@/types/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -24,6 +29,12 @@ export async function loginAction(
     result = await login(email, password);
   } catch (error) {
     console.log(error);
+    if (error instanceof ServiceUnavailableError) {
+      return {
+        message: "Service unavailable, try again later.",
+        values: { email, password },
+      };
+    }
     return {
       message: "Something went wrong. Please try again.",
       values: { email, password },
@@ -77,5 +88,22 @@ export async function signupAction(
   }
 
   // redirect() throws internally, so it must be outside try/catch
+  redirect("/login");
+}
+
+export async function logoutAction() {
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get("session")?.value;
+
+  if (sessionId) {
+    try {
+      await logout(sessionId);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  // Remove the cookie from the browser either way
+  cookieStore.delete("session");
   redirect("/login");
 }

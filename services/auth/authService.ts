@@ -1,15 +1,24 @@
 import { Session, SignupResult } from "@/types/auth";
 
+// Thrown when the backend can't be reached at all (down, wrong port, no network)
+export class ServiceUnavailableError extends Error {}
+
 export async function login(
   email: string,
   password: string,
 ): Promise<Session | null> {
   console.log({ email }, { password });
-  const res = await fetch(`${process.env.API_URL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
+    // fetch only rejects when no response arrived (e.g. ECONNREFUSED)
+    throw new ServiceUnavailableError("Backend unreachable");
+  }
 
   // 401 = wrong credentials (expected). Anything else is a real failure.
   if (res.status === 401) return null;
@@ -37,4 +46,12 @@ export async function signup(
     return { success: false, errors: data.errors };
   }
   throw new Error(`Signup failed with status ${res.status}`);
+}
+
+export async function logout(sessionId: string): Promise<void> {
+  const res = await fetch(`${process.env.API_URL}/logout`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${sessionId}` },
+  });
+  if (!res.ok) throw new Error(`Logout failed with status ${res.status}`);
 }
