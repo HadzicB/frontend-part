@@ -11,15 +11,18 @@ Current state: login and signup work end to end against the separate backend (`A
 - Logout: `logoutAction` calls the BE `/logout` (sends `Authorization: Bearer <id>`), deletes the cookie, redirects to `/login`.
 - `proxy.ts` (project root): optimistic check only, "does a `session` cookie exist?". Public routes list: `/login`, `/signup`, `/forgot-password`; everything else is protected by default. Matcher skips `api`, `_next/static`, `_next/image`, `favicon.ico`, `.png`. Has debug `console.log`s on redirects. I decided NOT to call the backend from the proxy.
 - Real session check: `getMe(sessionId)` in `authService.ts` calls BE `GET /me` (null on 401). `app/page.tsx` uses it and shows "Hello, <username>". If the BE rejects the session (fake/expired/logged out), the page redirects to `app/session-expired/route.ts`, which deletes the cookie and redirects to `/login` (without that, the proxy would bounce the user back to `/`: redirect loop).
-- `app/user/page.tsx` is a second protected page, currently protected by the proxy only (no `getMe` yet).
+- `app/user/page.tsx` is a second protected page; it has the same `getMe` check as the home page (copy-pasted for now, to be replaced by the central helper below).
 - Dev runs with `next dev --experimental-https` (self-signed cert, `https://localhost:3000`). `API_URL` stays plain http to the BE.
 
 ## Next steps (in order)
 
-1. Add the `getMe` check to `app/user/page.tsx` (same as the home page).
+1. (done) `getMe` check on `app/user/page.tsx`.
 2. BE auth guard so every protected BE endpoint validates the session itself (see the backend CLAUDE.md).
-3. Central place for BE calls (small `fetch` wrapper, server-only): base URL, auth header, error mapping, and one spot that handles a 401 by deleting the cookie and going to `/login`.
-4. Later: forgot password; signup creating a session (auto-login); roles/permissions with a data access layer (separate, more complex topic); maybe move to a `src/` folder (`@/*` alias would change).
+3. Central place for BE calls (small `fetch` wrapper, server-only): base URL, auth header, error mapping, and one spot that handles a 401 by redirecting to `/session-expired` (the route handler that deletes the cookie, because pages and render can't delete cookies). `getMe` is not special: it becomes a plain call through this wrapper.
+4. `verifySession()` in a data access layer (`lib/dal.ts`, `server-only`, wrapped in React `cache` so it runs once per render): the real-check counterpart of `proxy.ts`. Every page, action and BE data call goes through it, so no page copy-pastes a `getMe` block. Doc reference: "Creating a Data Access Layer (DAL)" in `node_modules/next/dist/docs/01-app/02-guides/authentication.md`.
+5. Idea to evaluate (probably overkill for two separate repos): shared zod schemas used by both FE and BE so validation rules aren't written twice. Cheaper options: zod only in each repo with the same rules, or BE as the single source of truth and FE just shows its 400 field errors. A shared package only pays off in a monorepo (pnpm workspace).
+6. Interview topic, learn the concept (not necessarily implement): JWT vs server-side sessions. We use opaque session IDs looked up in the `sessions` table (stateful, instantly revocable). JWT is a signed token (`header.payload.signature`) the server can verify without a DB lookup (stateless), but it can't be revoked before expiry unless you add a denylist or short expiry + refresh token. Be ready to explain the trade-off, where to store each (httpOnly cookie vs localStorage), and why we chose sessions. Ask Claude for a short web-Claude prompt when ready.
+7. Later: forgot password; signup creating a session (auto-login); roles/permissions with a data access layer (separate, more complex topic); maybe move to a `src/` folder (`@/*` alias would change).
 
 ## Still unclear to me (re-explain simply when I ask, in Serbian if I write Serbian)
 
