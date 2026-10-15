@@ -77,6 +77,12 @@ export async function signupAction(
     result = await signup(email, password);
   } catch (error) {
     console.log(error);
+    if (error instanceof ServiceUnavailableError) {
+      return {
+        message: "Service unavailable, try again later.",
+        values: { email, password },
+      };
+    }
     return {
       message: "Something went wrong. Please try again.",
       values: { email, password },

@@ -17,7 +17,7 @@ Current state: login and signup work end to end against the separate backend (`A
 ## Next steps (in order)
 
 1. (done) `getMe` check on `app/user/page.tsx`.
-2. (done, first version) BE auth guard so every protected BE endpoint validates the session itself (see the backend CLAUDE.md).
+2. (done) BE auth guard so every protected BE endpoint validates the session itself (see the backend CLAUDE.md). Error handling is aligned: `ServiceUnavailableError` for an unreachable BE in every service call, and `logout` treats a 401 as success.
 3. Central place for BE calls (small `fetch` wrapper, server-only): base URL, auth header, error mapping, and one spot that handles a 401 by redirecting to `/session-expired` (the route handler that deletes the cookie, because pages and render can't delete cookies). `getMe` is not special: it becomes a plain call through this wrapper.
 4. `verifySession()` in a data access layer (`lib/dal.ts`, `server-only`, wrapped in React `cache` so it runs once per render): the real-check counterpart of `proxy.ts`. Every page, action and BE data call goes through it, so no page copy-pastes a `getMe` block. Doc reference: "Creating a Data Access Layer (DAL)" in `node_modules/next/dist/docs/01-app/02-guides/authentication.md`.
 5. Idea to evaluate (probably overkill for two separate repos): shared zod schemas used by both FE and BE so validation rules aren't written twice. Cheaper options: zod only in each repo with the same rules, or BE as the single source of truth and FE just shows its 400 field errors. A shared package only pays off in a monorepo (pnpm workspace).

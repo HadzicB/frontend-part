@@ -32,11 +32,16 @@ export async function signup(
   email: string,
   password: string,
 ): Promise<SignupResult> {
-  const res = await fetch(`${process.env.API_URL}/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
+    throw new ServiceUnavailableError("Backend unreachable");
+  }
 
   if (res.ok) return { success: true };
 
@@ -49,20 +54,31 @@ export async function signup(
 }
 
 export async function logout(sessionId: string): Promise<void> {
-  const res = await fetch(`${process.env.API_URL}/logout`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${sessionId}` },
-  });
-  if (!res.ok) throw new Error(`Logout failed with status ${res.status}`);
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/logout`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${sessionId}` },
+    });
+  } catch {
+    throw new ServiceUnavailableError("Backend unreachable");
+  }
+  // 401 = session already gone (expired/logged out): the goal is reached
+  if (!res.ok && res.status !== 401) throw new Error(`Logout failed with status ${res.status}`);
 }
 
 // Asks the backend who owns this session. null = fake, expired or logged out.
 export async function getMe(
   sessionId: string,
 ): Promise<{ id: number; username: string } | null> {
-  const res = await fetch(`${process.env.API_URL}/me`, {
-    headers: { Authorization: `Bearer ${sessionId}` },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_URL}/me`, {
+      headers: { Authorization: `Bearer ${sessionId}` },
+    });
+  } catch {
+    throw new ServiceUnavailableError("Backend unreachable");
+  }
 
   if (res.status === 401) return null;
   if (!res.ok) throw new Error(`getMe failed with status ${res.status}`);
