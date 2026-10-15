@@ -29,6 +29,7 @@ Current state: login and signup work end to end against the separate backend (`A
 - Who checks the session and when, across many clicks: proxy = cookie exists only; every BE call carries the session ID and the BE checks `sessions` itself; `/me` is just a feature that returns the user, not "the" authorization.
 - Why a fake cookie passes the proxy but fails at the BE.
 - What server actions send/receive (form-data envelope and React Flight response, not JSON); only the Next-to-BE call is JSON.
+- Error flow across the whole chain: who returns and who throws errors, from the BE server to the Next server and then to the browser, and what each one does with an error (BE status + `{ message }`, what the service/action turns it into, what the browser finally sees: form message, redirect, or Next error page). I don't know this yet and will learn it by building (e.g. `error.tsx`, `not-found.tsx`, the central 401 handler in the fetch wrapper). Re-explain with a simple end-to-end example when I ask.
 
 # How to work with me
 
