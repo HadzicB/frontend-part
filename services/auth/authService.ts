@@ -64,7 +64,8 @@ export async function logout(sessionId: string): Promise<void> {
     throw new ServiceUnavailableError("Backend unreachable");
   }
   // 401 = session already gone (expired/logged out): the goal is reached
-  if (!res.ok && res.status !== 401) throw new Error(`Logout failed with status ${res.status}`);
+  if (!res.ok && res.status !== 401)
+    throw new Error(`Logout failed with status ${res.status}`);
 }
 
 // Asks the backend who owns this session. null = fake, expired or logged out.
@@ -73,7 +74,7 @@ export async function getMe(
 ): Promise<{ id: number; username: string } | null> {
   let res: Response;
   try {
-    res = await fetch(`${process.env.API_URL}/me`, {
+    res = await fetch(`${process.env.API_URL}/users/me`, {
       headers: { Authorization: `Bearer ${sessionId}` },
     });
   } catch {
