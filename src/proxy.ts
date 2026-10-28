@@ -26,5 +26,5 @@ export default function proxy(req: NextRequest) {
 
 // Routes the proxy should NOT run on (static files, images, etc.)
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)"],
 };

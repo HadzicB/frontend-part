@@ -8,14 +8,14 @@ import {
   ServiceUnavailableError,
   signup,
 } from "@/services/auth/authService";
-import { ActionState, Session } from "@/types/auth";
+import { LoginFormState, Session, SignupFormState } from "@/types/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function loginAction(
-  _prevState: ActionState,
+  _prevState: LoginFormState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<LoginFormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -61,9 +61,9 @@ export async function loginAction(
 }
 
 export async function signupAction(
-  _prevState: ActionState,
+  _prevState: SignupFormState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<SignupFormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 

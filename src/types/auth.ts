@@ -8,8 +8,14 @@ export type SignupResult = {
   errors?: Record<string, string[]>; // field errors sent by the backend (400/409)
 };
 
-export type ActionState = {
+export type LoginFormState = {
   message?: string; // overall message, e.g. "Wrong email or password"
   errors?: Record<string, string[]>; // per-field, e.g. { email: ["Invalid email"] }
   values?: { email?: string; password?: string }; // submitted values to refill the form
+};
+
+export type SignupFormState = {
+  message?: string;
+  errors?: Record<string, string[]>;
+  values?: { email?: string; password?: string; confirmPassword?: string };
 };
